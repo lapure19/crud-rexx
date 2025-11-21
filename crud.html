@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PartyNeeds — Inventory Management</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#0b1220;
+      --accent1:#7c3aed;
+      --accent2:#06b6d4;
+      --muted:#94a3b8;
+      --glass: rgba(255,255,255,0.04);
+    }
+
+    *{box-sizing:border-box;font-family:Inter,InterVar,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{
+      margin:0;
+      min-height:100vh;
+      background: linear-gradient(180deg, #071028 0%, #071026 60%), radial-gradient(800px 400px at 10% 10%, rgba(124,58,237,0.08), transparent 10%), radial-gradient(600px 300px at 90% 90%, rgba(6,182,212,0.04), transparent 10%);
+      color:#e6eef8;
+      padding:28px;
+    }
+
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column; /* vertical layout */
+      gap:20px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    header h1{
+      font-size:20px;
+      margin:0;
+      letter-spacing:0.2px;
+    }
+
+    header p{ margin:0; color:var(--muted); font-size:13px; }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.04);
+      padding:18px;
+      border-radius:12px;
+      box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+    }
+
+    /* Form area */
+    form#itemForm{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .row{
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+    }
+
+    .col{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    label{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:var(--glass);
+      color:var(--muted);
+      outline:none;
+    }
+    textarea{ min-height:80px; resize:vertical; color:var(--muted); }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      margin-top:6px;
+      align-items:center;
+    }
+
+    button{
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    .btn-primary{
+      background:linear-gradient(90deg,var(--accent1), var(--accent2));
+      color:white;
+      box-shadow: 0 8px 30px rgba(7,11,30,0.6);
+    }
+
+    .btn-ghost{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* Search & summary */
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      margin-top:6px;
+      flex-wrap:wrap;
+    }
+
+    .search{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .search input{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:transparent;
+      color:var(--muted);
+    }
+
+    /* Table */
+    .table-wrap{
+      overflow:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+      min-width:800px;
+    }
+
+    th, td{
+      text-align:left;
+      padding:12px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      font-size:14px;
+      color: #dbeafe;
+    }
+
+    th{
+      color:var(--muted);
+      font-size:13px;
+      letter-spacing:0.6px;
+      text-transform:uppercase;
+    }
+
+    td .actions{
+      display:flex;
+      gap:8px;
+    }
+
+    .chip{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      background:rgba(255,255,255,0.03);
+      color:var(--muted);
+    }
+
+    .total-row td{
+      font-weight:700;
+      color:#fff;
+      background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+    }
+
+    /* small screens */
+    @media (max-width:900px){
+      .row{ flex-direction:column; }
+      table{ min-width:600px; }
+    }
+
+    /* tiny niceties */
+    .small{
+      font-size:13px;color:var(--muted);
+    }
+    .btn-icon{
+      padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02);color:var(--muted);border:1px solid rgba(255,255,255,0.03);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>PartyNeeds — Inventory Management</h1>
+        <p class="small">Add, edit and track party supplies — designed vertical for clarity.</p>
+      </div>
+      <div class="small muted">LocalStorage-enabled • Modern UI</div>
+      <button id="logoutBtn" class="btn-ghost" style="font-size:13px;">Logout</button>
+    </header>
+
+    <!-- FORM CARD -->
+    <section class="card" aria-labelledby="formTitle">
+      <h2 id="formTitle" style="margin:0 0 12px 0;">Register / Edit Item</h2>
+
+      <form id="itemForm" onsubmit="return false;">
+        <input type="hidden" id="itemId">
+
+        <div class="row">
+          <div class="col">
+            <label for="name">Item Name</label>
+            <input id="name" type="text" placeholder="e.g., Round Tables (6ft)" required>
+          </div>
+
+          <div class="col">
+            <label for="category">Category</label>
+            <select id="category">
+              <option value="Decoration">Decoration</option>
+              <option value="Furniture">Furniture</option>
+              <option value="Utensils">Utensils</option>
+              <option value="Lighting">Lighting</option>
+              <option value="Sound">Sound</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label for="quantity">Quantity</label>
+            <input id="quantity" type="number" min="0" value="1" required>
+          </div>
+
+          <div class="col">
+            <label for="price">Unit Price (₱)</label>
+            <input id="price" type="number" min="0" step="0.01" value="0.00" required>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label for="supplier">Supplier</label>
+            <input id="supplier" type="text" placeholder="Supplier name or contact">
+          </div>
+
+          <div class="col">
+            <label for="acquired">Acquired Date</label>
+            <input id="acquired" type="date">
+          </div>
+        </div>
+
+        <div>
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" placeholder="Size, color, condition..."></textarea>
+        </div>
+
+        <div class="controls">
+          <button id="saveBtn" class="btn-primary">Add Item</button>
+          <button id="updateBtn" class="btn-primary" style="display:none;background:linear-gradient(90deg,#06b6d4,#7c3aed);">Update Item</button>
+          <button id="clearBtn" class="btn-ghost" type="button">Clear</button>
+          <div style="margin-left:auto" class="muted">Tip: Click an item <strong>Edit</strong> to load in the form</div>
+        </div>
+      </form>
+    </section>
+
+    <!-- TABLE CARD -->
+    <section class="card">
+      <div class="toolbar">
+        <div class="search">
+          <input id="search" placeholder="Search items by name, category, supplier..." />
+          <button id="refreshBtn" class="btn-icon" title="Reload from storage">⟳</button>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="muted small">Items: <span id="count">0</span></div>
+          <div class="muted small">Total Value: ₱<span id="totalValue">0.00</span></div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="inventoryTable" aria-describedby="tableDesc">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Unit ₱</th>
+              <th>Subtotal ₱</th>
+              <th>Supplier</th>
+              <th>Acquired</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="tbody">
+            <!-- rows injected here -->
+          </tbody>
+
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="4">Totals</td>
+              <td id="footerTotal">₱0.00</td>
+              <td colspan="4"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Simple Inventory CRUD using localStorage
+    const STORAGE_KEY = 'partyNeeds_inventory_v1';
+    let items = [];
+
+    // Element refs
+    const itemForm = document.getElementById('itemForm');
+    const nameEl = document.getElementById('name');
+    const categoryEl = document.getElementById('category');
+    const quantityEl = document.getElementById('quantity');
+    const priceEl = document.getElementById('price');
+    const supplierEl = document.getElementById('supplier');
+    const acquiredEl = document.getElementById('acquired');
+    const notesEl = document.getElementById('notes');
+    const itemIdEl = document.getElementById('itemId');
+    const tbody = document.getElementById('tbody');
+    const countEl = document.getElementById('count');
+    const totalValueEl = document.getElementById('totalValue');
+    const footerTotal = document.getElementById('footerTotal');
+
+    const saveBtn = document.getElementById('saveBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const searchEl = document.getElementById('search');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // Helpers
+    function uid() {
+      return 'id_' + Math.random().toString(36).slice(2,9);
+    }
+
+    function formatCurrency(n){
+      return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+
+    function saveToStorage(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function loadFromStorage(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      items = raw ? JSON.parse(raw) : [];
+      renderTable();
+    }
+
+    function clearForm(){
+      itemForm.reset();
+      itemIdEl.value = '';
+      updateBtn.style.display = 'none';
+      saveBtn.style.display = 'inline-block';
+      priceEl.value = "0.00";
+      quantityEl.value = 1;
+    }
+
+    // Create
+    saveBtn.addEventListener('click', () => {
+      const name = nameEl.value.trim();
+      const qty = Number(quantityEl.value);
+      const price = Number(priceEl.value);
+
+      if(!name) { alert('Please enter item name'); nameEl.focus(); return; }
+      if(qty < 0) { alert('Quantity cannot be negative'); quantityEl.focus(); return; }
+      if(price < 0) { alert('Price cannot be negative'); priceEl.focus(); return; }
+
+      const item = {
+        id: uid(),
+        name,
+        category: categoryEl.value,
+        quantity: qty,
+        price: +price.toFixed(2),
+        supplier: supplierEl.value.trim(),
+        acquired: acquiredEl.value || '',
+        notes: notesEl.value.trim(),
+        createdAt: new Date().toISOString()
+      };
+
+      items.unshift(item); // newest first
+      saveToStorage();
+      renderTable();
+      clearForm();
+    });
+
+    // Read / Render
+    function renderTable(filter = ''){
+      tbody.innerHTML = '';
+      const q = filter.toLowerCase();
+
+      let filtered = items.filter(it => {
+        if(!q) return true;
+        return (it.name + ' ' + it.category + ' ' + it.supplier + ' ' + it.notes).toLowerCase().includes(q);
+      });
+
+      filtered.forEach(it => {
+        const subtotal = it.quantity * it.price;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(it.name)}</strong></td>
+          <td><span class="chip">${escapeHtml(it.category)}</span></td>
+          <td>${it.quantity}</td>
+          <td>₱${formatCurrency(it.price)}</td>
+          <td>₱${formatCurrency(subtotal)}</td>
+          <td>${escapeHtml(it.supplier || '-')}</td>
+          <td>${it.acquired ? escapeHtml(it.acquired) : '-'}</td>
+          <td class="small">${escapeHtml(it.notes || '-')}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-icon" title="Edit" data-action="edit" data-id="${it.id}">✎</button>
+              <button class="btn-icon" title="Delete" data-action="delete" data-id="${it.id}">🗑</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // summary
+      countEl.textContent = filtered.length;
+      const totalValue = filtered.reduce((s, it) => s + (it.quantity * it.price), 0);
+      totalValueEl.textContent = formatCurrency(totalValue);
+      footerTotal.textContent = '₱' + formatCurrency(totalValue);
+    }
+
+    // Edit / Update / Delete (event delegation on tbody)
+    tbody.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if(action === 'edit'){
+        const it = items.find(x => x.id === id);
+        if(!it) return;
+        // load into form
+        itemIdEl.value = it.id;
+        nameEl.value = it.name;
+        categoryEl.value = it.category;
+        quantityEl.value = it.quantity;
+        priceEl.value = it.price;
+        supplierEl.value = it.supplier;
+        acquiredEl.value = it.acquired;
+        notesEl.value = it.notes;
+        saveBtn.style.display = 'none';
+        updateBtn.style.display = 'inline-block';
+        window.scrollTo({ top: 0, behavior:'smooth' });
+      } else if(action === 'delete'){
+        if(!confirm('Delete this item?')) return;
+        items = items.filter(x => x.id !== id);
+        saveToStorage();
+        renderTable(searchEl.value);
+      }
+    });
+
+    // Update
+    updateBtn.addEventListener('click', () => {
+      const id = itemIdEl.value;
+      if(!id) return alert('No item selected to update.');
+      const itIndex = items.findIndex(x => x.id === id);
+      if(itIndex === -1) return alert('Item not found.');
+
+      const name = nameEl.value.trim();
+      const qty = Number(quantityEl.value);
+      const price = Number(priceEl.value);
+      if(!name) { alert('Please enter item name'); nameEl.focus(); return; }
+      if(qty < 0) { alert('Quantity cannot be negative'); quantityEl.focus(); return; }
+      if(price < 0) { alert('Price cannot be negative'); priceEl.focus(); return; }
+
+      items[itIndex] = {
+        ...items[itIndex],
+        name,
+        category: categoryEl.value,
+        quantity: qty,
+        price: +price.toFixed(2),
+        supplier: supplierEl.value.trim(),
+        acquired: acquiredEl.value || '',
+        notes: notesEl.value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+
+      saveToStorage();
+      renderTable(searchEl.value);
+      clearForm();
+    });
+
+    // Clear form
+    clearBtn.addEventListener('click', () => {
+      if(confirm('Clear the form? Unsaved changes will be lost.')) clearForm();
+    });
+
+    // Search
+    searchEl.addEventListener('input', () => {
+      renderTable(searchEl.value);
+    });
+
+    // Refresh (reload from storage)
+    refreshBtn.addEventListener('click', () => {
+      loadFromStorage();
+      searchEl.value = '';
+    });
+
+    // Utilities
+    function escapeHtml(text = ''){
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // initial load
+    loadFromStorage();
+
+    // Preload demo data if empty (for first-time use) — optional; remove if you don't want it
+    if(!items.length){
+      items = [
+        { id: uid(), name: 'Round Table (6ft)', category: 'Furniture', quantity: 10, price: 500.00, supplier: 'FiestaRentals', acquired: '2025-08-12', notes: 'Good condition' },
+        { id: uid(), name: 'Folding Chairs', category: 'Furniture', quantity: 100, price: 45.00, supplier: 'HappySeats', acquired: '2025-09-01', notes: '' },
+        { id: uid(), name: 'String Lights (10m)', category: 'Lighting', quantity: 8, price: 250.00, supplier: 'LightCo', acquired: '2025-09-05', notes: 'warm white' },
+      ];
+      saveToStorage();
+      renderTable();
+    }
+
+    // --------------- LOGIN PROTECTION ------------------
+if(localStorage.getItem("partyNeeds_loggedIn") !== "true"){
+  window.location.href = "index.html"; // block access
+}
+
+// --------------- LOGOUT FUNCTION -------------------
+const logoutBtn = document.getElementById('logoutBtn');
+logoutBtn.addEventListener('click', () => {
+  if(confirm("Logout from PartyNeeds?")){
+    localStorage.removeItem("partyNeeds_loggedIn");
+    window.location.href = "index.html";
+  }
+});
+
+  </script>
+</body>
+</html>

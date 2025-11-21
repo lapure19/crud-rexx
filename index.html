@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PartyNeeds — Login</title>
+<style>
+  body{
+    margin:0;
+    min-height:100vh;
+    background:#0f172a;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:Arial;
+    color:white;
+  }
+  .card{
+    background:rgba(255,255,255,0.05);
+    padding:30px;
+    border-radius:15px;
+    width:320px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  h2{
+    margin:0 0 20px 0;
+    text-align:center;
+  }
+  input{
+    width:100%;
+    padding:12px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.08);
+    border-radius:10px;
+    margin-bottom:12px;
+    color:white;
+    outline:none;
+  }
+  button{
+    width:100%;
+    padding:12px;
+    background:linear-gradient(90deg,#7c3aed,#06b6d4);
+    border:none;
+    color:white;
+    font-weight:bold;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  p{
+    margin-top:15px;
+    font-size:13px;
+    color:#cbd5e1;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>PartyNeeds Login</h2>
+
+  <input id="username" type="text" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <p>Default: <strong>admin / admin123</strong></p>
+</div>
+
+<script>
+  // Default admin account (you can change this)
+  const defaultUser = {
+    username: "admin",
+    password: "admin123"
+  };
+
+  // Save default credentials if none exist yet
+  if(!localStorage.getItem("partyNeeds_user")){
+    localStorage.setItem("partyNeeds_user", JSON.stringify(defaultUser));
+  }
+
+  function login(){
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+
+    const saved = JSON.parse(localStorage.getItem("partyNeeds_user"));
+
+    if(u === saved.username && p === saved.password){
+      localStorage.setItem("partyNeeds_loggedIn", "true");
+      window.location.href = "crud.html";   // go to dashboard
+    } else {
+      alert("Invalid username or password.");
+    }
+  }
+
+  // If already logged in, jump to dashboard
+  if(localStorage.getItem("partyNeeds_loggedIn") === "true"){
+    window.location.href = "crud.html";
+  }
+</script>
+
+</body>
+</html>
